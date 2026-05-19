@@ -168,6 +168,7 @@ else:
             })
         
                # Показываем результат
+                # Показываем результат
         st.success("✅ Платёж успешно проведён!")
         st.balloons()
         st.header("🔑 Ваши лицензионные ключи:")
@@ -178,16 +179,17 @@ else:
         st.info("📧 Ключи также отправлены на вашу электронную почту.")
         
         # --- ИСПРАВЛЕННАЯ НАВИГАЦИЯ ---
+        st.markdown("---")
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("🛒 Продолжить покупки", key="continue_shopping"):
+            if st.button("🛒 Продолжить покупки", key="continue_shopping", use_container_width=True):
                 st.rerun()
         with col2:
-            # Проверяем, существует ли страница с лицензиями
+            # Исправлено: правильное имя файла (без цифры)
             try:
-                st.switch_page("pages/1_Мои_лицензии.py")
+                st.switch_page("pages/Мои_лицензии.py")
             except:
-                st.markdown("[🔑 Перейти к моим лицензиям](https://[ТВОЙ_АДРЕС].streamlit.app/?page=licenses)")
+                st.markdown("[🔑 Перейти к моим лицензиям](./Мои_лицензии)")
         
         # Очищаем корзину
         st.session_state.cart = []
