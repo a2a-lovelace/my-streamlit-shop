@@ -167,7 +167,7 @@ else:
                 "date": time.strftime("%Y-%m-%d %H:%M:%S")
             })
         
-        # Показываем результат
+               # Показываем результат
         st.success("✅ Платёж успешно проведён!")
         st.balloons()
         st.header("🔑 Ваши лицензионные ключи:")
@@ -176,7 +176,18 @@ else:
             st.code(f"{license_item['product_name']}: {license_item['key']}", language="text")
         
         st.info("📧 Ключи также отправлены на вашу электронную почту.")
-        st.page_link("pages/1_Мои_лицензии.py", label="📋 Перейти к моим лицензиям", icon="🔑")
+        
+        # --- ИСПРАВЛЕННАЯ НАВИГАЦИЯ ---
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🛒 Продолжить покупки", key="continue_shopping"):
+                st.rerun()
+        with col2:
+            # Проверяем, существует ли страница с лицензиями
+            try:
+                st.switch_page("pages/1_Мои_лицензии.py")
+            except:
+                st.markdown("[🔑 Перейти к моим лицензиям](https://[ТВОЙ_АДРЕС].streamlit.app/?page=licenses)")
         
         # Очищаем корзину
         st.session_state.cart = []
