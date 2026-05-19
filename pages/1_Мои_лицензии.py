@@ -29,7 +29,9 @@ if st.session_state.issued_licenses:
                 st.success(f"✅ Лицензия {lic['key'][:8]}... активна и действительна")
 else:
     st.info("📭 У вас пока нет лицензий. Совершите покупку в магазине!")
-    st.page_link("app.py", label="🛒 Перейти в магазин", icon="🛍️")
+    # ИСПРАВЛЕНО: вместо st.page_link используем кнопку
+    if st.button("🛒 Перейти в магазин", key="go_to_shop"):
+        st.switch_page("app.py")
 
 st.markdown("---")
 
@@ -61,5 +63,8 @@ if st.button("Проверить ключ", key="validate_btn"):
 st.markdown("---")
 st.caption("💡 Это демонстрационная версия. В реальном проекте ключи проверяются через API вашего ПО.")
 
-# Кнопка возврата
-st.page_link("app.py", label="← Вернуться в магазин", icon="🛒")
+# Кнопка возврата (ИСПРАВЛЕНО)
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    if st.button("← Вернуться в магазин", key="back_to_shop", use_container_width=True):
+        st.switch_page("app.py")
