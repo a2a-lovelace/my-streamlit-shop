@@ -1,150 +1,112 @@
 import streamlit as st
 import random
 import string
-import json
 import time
 
-# --- ДОЛЖНО БЫТЬ САМЫМ ПЕРВЫМ ---
 st.set_page_config(page_title="Магазин лицензий", page_icon="🛒", layout="wide")
 
-# --- Инициализация session_state ---
+# Инициализация
 if 'cart' not in st.session_state:
     st.session_state.cart = []
 if 'promo_code_applied' not in st.session_state:
     st.session_state.promo_code_applied = None
 if 'issued_licenses' not in st.session_state:
     st.session_state.issued_licenses = []
+if 'show_licenses' not in st.session_state:
+    st.session_state.show_licenses = False
 
-# --- Словарь промокодов ---
-promocodes = {
-    "DISCOUNT20": 0.20,
-    "WELCOME10": 0.10,
-    "TEAMUP": 0.25
-}
+# Промокоды
+promocodes = {"DISCOUNT20": 0.20, "WELCOME10": 0.10, "TEAMUP": 0.25}
 
-# --- Товары ---
+# Товары
 products = {
-    "pro": {"name": "💻 Лицензия PRO", "price": 1000, "description": "Бессрочная лицензия. Поддержка 1 год."},
-    "team": {"name": "👥 Лицензия TEAM (3 пользователя)", "price": 2500, "description": "Для малого бизнеса. Поддержка 2 года."}
+    "pro": {"name": "💻 Лицензия PRO", "price": 1000},
+    "team": {"name": "👥 Лицензия TEAM", "price": 2500}
 }
 
-# --- Заголовок ---
-st.title("🛒 Магазин цифровых товаров")
-st.markdown("---")
+# --- МЕНЮ НАВИГАЦИИ (простое) ---
+st.sidebar.title("📋 Меню")
+if st.sidebar.button("🛒 Магазин"):
+    st.session_state.show_licenses = False
+    st.rerun()
+if st.sidebar.button("🔑 Мои лицензии"):
+    st.session_state.show_licenses = True
+    st.rerun()
 
-# --- Отображение товаров ---
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader(products["pro"]["name"])
-    st.write(products["pro"]["description"])
-    st.write(f"**Цена:** {products['pro']['price']} ₽")
-    if st.button("➕ В корзину", key="add_pro"):
-        st.session_state.cart.append("pro")
-        st.success("✅ Добавлено в корзину!")
-        st.rerun()
-
-with col2:
-    st.subheader(products["team"]["name"])
-    st.write(products["team"]["description"])
-    st.write(f"**Цена:** {products['team']['price']} ₽")
-    if st.button("➕ В корзину", key="add_team"):
-        st.session_state.cart.append("team")
-        st.success("✅ Добавлено в корзину!")
-        st.rerun()
-
-st.markdown("---")
-
-# --- Корзина ---
-st.header("🛍️ Ваша корзина")
-
-if not st.session_state.cart:
-    st.info("Корзина пуста. Добавьте товары выше.")
-else:
-    # Считаем сумму
-    total = 0
-    cart_counts = {}
-    for item in st.session_state.cart:
-        cart_counts[item] = cart_counts.get(item, 0) + 1
-        total += products[item]["price"]
+# --- СТРАНИЦА МАГАЗИНА ---
+if not st.session_state.show_licenses:
+    st.title("🛒 Магазин цифровых товаров")
     
-    # Показываем корзину
-    for item_id, qty in cart_counts.items():
-        item_total = products[item_id]["price"] * qty
-        st.write(f"- {products[item_id]['name']} x{qty} = {item_total} ₽")
-    
-    # Промокод
-    promo_input = st.text_input("🎟️ Промокод", key="promo_input", 
-                                 placeholder="Введите DISCOUNT20, WELCOME10 или TEAMUP")
-    
-    discount_rate = 0
-    if promo_input and promo_input in promocodes:
-        discount_rate = promocodes[promo_input]
-        if st.session_state.promo_code_applied != promo_input:
-            st.session_state.promo_code_applied = promo_input
-            st.success(f"✅ Промокод {promo_input} применён! Скидка {discount_rate*100:.0f}%")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader(products["pro"]["name"])
+        st.write(f"Цена: {products['pro']['price']} ₽")
+        if st.button("➕ В корзину", key="add_pro"):
+            st.session_state.cart.append("pro")
+            st.success("Добавлено!")
             st.rerun()
-    elif promo_input and promo_input not in promocodes:
-        st.error("❌ Неверный промокод")
     
-    # Применяем скидку
-    if st.session_state.promo_code_applied in promocodes:
-        discount_rate = promocodes[st.session_state.promo_code_applied]
+    with col2:
+        st.subheader(products["team"]["name"])
+        st.write(f"Цена: {products['team']['price']} ₽")
+        if st.button("➕ В корзину", key="add_team"):
+            st.session_state.cart.append("team")
+            st.success("Добавлено!")
+            st.rerun()
     
-    discount = total * discount_rate
-    final_total = total - discount
+    st.markdown("---")
+    st.header("🛍️ Корзина")
     
-    if discount > 0:
-        st.write(f"**Скидка:** -{discount:.0f} ₽")
-    st.markdown(f"### Итого к оплате: {final_total:.0f} ₽")
+    if not st.session_state.cart:
+        st.info("Корзина пуста")
+    else:
+        total = sum(products[item]["price"] for item in st.session_state.cart)
+        
+        # Промокод
+        promo = st.text_input("Промокод", placeholder="DISCOUNT20, WELCOME10, TEAMUP")
+        discount = 0
+        if promo in promocodes:
+            discount = total * promocodes[promo]
+            st.success(f"Скидка {promocodes[promo]*100:.0f}%!")
+        
+        final_total = total - discount
+        st.write(f"**Итого: {final_total:.0f} ₽**")
+        
+        if st.button("💳 Оплатить"):
+            with st.spinner("Обработка..."):
+                time.sleep(1)
+            
+            # Сохраняем лицензии
+            for item in st.session_state.cart:
+                key = f"{item.upper()}-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+                st.session_state.issued_licenses.append({
+                    "product": products[item]["name"],
+                    "key": key,
+                    "date": time.strftime("%Y-%m-%d %H:%M:%S")
+                })
+            
+            st.success("Оплачено!")
+            st.balloons()
+            
+            # Показываем ключи
+            st.subheader("🔑 Ваши лицензионные ключи:")
+            for lic in st.session_state.issued_licenses[-len(st.session_state.cart):]:
+                st.code(f"{lic['product']}: {lic['key']}")
+            
+            st.session_state.cart = []
+            st.session_state.promo_code_applied = None
+
+# --- СТРАНИЦА МОИ ЛИЦЕНЗИИ ---
+else:
+    st.title("🔑 Мои лицензии")
     
-    # Очистка корзины
-    if st.button("🗑️ Очистить корзину", key="clear_cart"):
-        st.session_state.cart = []
-        st.session_state.promo_code_applied = None
-        st.rerun()
-    
-    # Кнопка оплаты
-    if st.button("💳 Оформить заказ и оплатить", key="checkout"):
-        with st.spinner("Обработка платежа..."):
-            time.sleep(1.5)
-        
-        # Генерируем ключи для КАЖДОГО товара
-        license_keys = []
-        for item_id in st.session_state.cart:
-            key = f"{item_id.upper()}-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-            license_keys.append({
-                "product_name": products[item_id]["name"],
-                "key": key
-            })
-            # Сохраняем в историю лицензий
-            st.session_state.issued_licenses.append({
-                "product_name": products[item_id]["name"],
-                "key": key,
-                "date": time.strftime("%Y-%m-%d %H:%M:%S")
-            })
-        
-        # Показываем результат
-        st.success("✅ Платёж успешно проведён!")
-        st.balloons()
-        st.header("🔑 Ваши лицензионные ключи:")
-        
-        for license_item in license_keys:
-            st.code(f"{license_item['product_name']}: {license_item['key']}", language="text")
-        
-        st.info("📧 Ключи также отправлены на вашу электронную почту.")
-        
-        # --- НАВИГАЦИЯ ---
-        st.markdown("---")
-        col_btn1, col_btn2 = st.columns(2)
-        with col_btn1:
-            if st.button("🛒 Продолжить покупки", key="continue_shopping", use_container_width=True):
-                st.rerun()
-        with col_btn2:
-            if st.button("🔑 Мои лицензии", key="go_to_licenses", use_container_width=True):
-                st.switch_page("pages/licenses.py")
-        
-        # Очищаем корзину
-        st.session_state.cart = []
-        st.session_state.promo_code_applied = None
-        st.stop()
+    if not st.session_state.issued_licenses:
+        st.info("У вас пока нет лицензий")
+    else:
+        for idx, lic in enumerate(reversed(st.session_state.issued_licenses)):
+            with st.container(border=True):
+                st.markdown(f"**{lic['product']}**")
+                st.code(lic['key'])
+                st.caption(f"Дата: {lic['date']}")
+                if st.button(f"Проверить", key=f"check_{idx}"):
+                    st.success(f"✅ Лицензия активна")
