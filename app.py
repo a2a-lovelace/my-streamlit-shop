@@ -168,7 +168,6 @@ else:
             })
         
                # Показываем результат
-                # Показываем результат
         st.success("✅ Платёж успешно проведён!")
         st.balloons()
         st.header("🔑 Ваши лицензионные ключи:")
@@ -178,14 +177,13 @@ else:
         
         st.info("📧 Ключи также отправлены на вашу электронную почту.")
         
-        # --- ИСПРАВЛЕННАЯ НАВИГАЦИЯ ---
+        # --- НАВИГАЦИЯ ---
         st.markdown("---")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🛒 Продолжить покупки", key="continue_shopping", use_container_width=True):
                 st.rerun()
         with col2:
-            # Исправлено: правильное имя файла (без цифры)
             try:
                 st.switch_page("pages/Мои_лицензии.py")
             except:
