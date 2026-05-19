@@ -48,16 +48,17 @@ st.header("🛍️ Ваша корзина")
 if not st.session_state.cart:
     st.info("Корзина пуста. Добавьте товары выше.")
 else:
-    # Считаем сумму
+    # Считаем сумму и собираем список товаров с количеством
     total = 0
-    cart_items = {}
+    cart_counts = {}
     for item in st.session_state.cart:
-        cart_items[item] = cart_items.get(item, 0) + 1
+        cart_counts[item] = cart_counts.get(item, 0) + 1
         total += products[item]["price"]
     
-    # Показываем корзину
-    for item_id, qty in cart_items.items():
-        st.write(f"- {products[item_id]['name']} x{qty} = {products[item_id]['price'] * qty} ₽")
+    # Показываем корзину построчно
+    for item_id, qty in cart_counts.items():
+        item_total = products[item_id]["price"] * qty
+        st.write(f"- {products[item_id]['name']} x{qty} = {item_total} ₽")
     
     # Промокод
     promo_code = st.text_input("🎟️ Промокод (ВВЕДИТЕ: DISCOUNT20)", key="promo_input")
@@ -79,20 +80,26 @@ else:
     if st.button("💳 Оформить заказ и оплатить", key="checkout"):
         with st.spinner("Обработка платежа..."):
             import time
-            time.sleep(1.5)  # Имитация запроса к платёжной системе
+            time.sleep(1.5)
         
-        # Генерация лицензионных ключей (по одному на каждый уникальный товар)
-        license_keys = {}
-        for item_id in set(st.session_state.cart):
+        # --- ИСПРАВЛЕНО: генерируем ключ ДЛЯ КАЖДОГО экземпляра товара ---
+        license_keys = []  # теперь это список, а не словарь
+        for item_id in st.session_state.cart:
             key = f"{item_id.upper()}-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-            license_keys[products[item_id]["name"]] = key
+            license_keys.append({
+                "product_name": products[item_id]["name"],
+                "key": key
+            })
         
         # Показываем результат
         st.success("✅ Платёж успешно проведён!")
         st.balloons()
         st.header("🔑 Ваши лицензионные ключи:")
-        for product_name, key in license_keys.items():
-            st.code(f"{product_name}: {key}", language="text")
+        
+        # Выводим каждый ключ отдельной строкой
+        for license_item in license_keys:
+            st.code(f"{license_item['product_name']}: {license_item['key']}", language="text")
+        
         st.info("📧 Ключи также отправлены на вашу электронную почту.")
         
         # Очищаем корзину
