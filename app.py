@@ -24,7 +24,7 @@ products = {
     "team": {"name": "👥 Лицензия TEAM", "price": 2500}
 }
 
-# --- МЕНЮ НАВИГАЦИИ (простое) ---
+# --- МЕНЮ НАВИГАЦИИ ---
 st.sidebar.title("📋 Меню")
 if st.sidebar.button("🛒 Магазин"):
     st.session_state.show_licenses = False
@@ -60,39 +60,58 @@ if not st.session_state.show_licenses:
     if not st.session_state.cart:
         st.info("Корзина пуста")
     else:
-        total = sum(products[item]["price"] for item in st.session_state.cart)
+        # Считаем сумму
+        total = 0
+        for item in st.session_state.cart:
+            total += products[item]["price"]
+        
+        # Показываем содержимое корзины
+        for item in st.session_state.cart:
+            st.write(f"- {products[item]['name']}: {products[item]['price']} ₽")
         
         # Промокод
-        promo = st.text_input("Промокод", placeholder="DISCOUNT20, WELCOME10, TEAMUP")
+        promo = st.text_input("🎟️ Промокод", placeholder="DISCOUNT20, WELCOME10, TEAMUP")
         discount = 0
-        if promo in promocodes:
+        if promo and promo in promocodes:
             discount = total * promocodes[promo]
-            st.success(f"Скидка {promocodes[promo]*100:.0f}%!")
+            st.success(f"✅ Промокод {promo} применён! Скидка {promocodes[promo]*100:.0f}%")
         
         final_total = total - discount
-        st.write(f"**Итого: {final_total:.0f} ₽**")
+        if discount > 0:
+            st.write(f"**Скидка:** -{discount:.0f} ₽")
+        st.markdown(f"### Итого к оплате: {final_total:.0f} ₽")
         
-        if st.button("💳 Оплатить"):
-            with st.spinner("Обработка..."):
-                time.sleep(1)
+        # Кнопка очистки
+        if st.button("🗑️ Очистить корзину"):
+            st.session_state.cart = []
+            st.rerun()
+        
+        # Кнопка оплаты
+        if st.button("💳 Оплатить", key="checkout"):
+            with st.spinner("Обработка платежа..."):
+                time.sleep(1.5)
             
-            # Сохраняем лицензии
+            # Сохраняем лицензии (каждый товар -> свой ключ)
             for item in st.session_state.cart:
                 key = f"{item.upper()}-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
                 st.session_state.issued_licenses.append({
-                    "product": products[item]["name"],
+                    "product_name": products[item]["name"],
                     "key": key,
                     "date": time.strftime("%Y-%m-%d %H:%M:%S")
                 })
             
-            st.success("Оплачено!")
+            st.success("✅ Платёж успешно проведён!")
             st.balloons()
             
-            # Показываем ключи
+            # Показываем новые ключи
             st.subheader("🔑 Ваши лицензионные ключи:")
-            for lic in st.session_state.issued_licenses[-len(st.session_state.cart):]:
-                st.code(f"{lic['product']}: {lic['key']}")
+            new_keys = st.session_state.issued_licenses[-len(st.session_state.cart):]
+            for lic in new_keys:
+                st.code(f"{lic['product_name']}: {lic['key']}", language="text")
             
+            st.info("📧 Ключи также отправлены на вашу электронную почту.")
+            
+            # Очищаем корзину
             st.session_state.cart = []
             st.session_state.promo_code_applied = None
 
@@ -101,12 +120,16 @@ else:
     st.title("🔑 Мои лицензии")
     
     if not st.session_state.issued_licenses:
-        st.info("У вас пока нет лицензий")
+        st.info("📭 У вас пока нет лицензий. Совершите покупку в магазине!")
     else:
         for idx, lic in enumerate(reversed(st.session_state.issued_licenses)):
             with st.container(border=True):
-                st.markdown(f"**{lic['product']}**")
-                st.code(lic['key'])
-                st.caption(f"Дата: {lic['date']}")
-                if st.button(f"Проверить", key=f"check_{idx}"):
-                    st.success(f"✅ Лицензия активна")
+                st.markdown(f"**{lic['product_name']}**")
+                st.code(lic['key'], language="text")
+                st.caption(f"Приобретена: {lic['date']}")
+                
+                if st.button("🔍 Проверить статус", key=f"check_{idx}"):
+                    st.success(f"✅ Лицензия {lic['key'][:8]}... активна и действительна")
+        
+        st.markdown("---")
+        st.caption("💡 Это демонстрационная версия. В реальном проекте ключи проверяются через API.")
