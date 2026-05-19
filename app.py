@@ -17,10 +17,10 @@ st.set_page_config(
 
 # --- Константы ---
 DB_FILE = "licenses_db.json"
-STUDENT_NAME = "⭐ Марина С.⭐"  # Замените на свои данные
-STUDENT_GROUP = "122-МКо"  # Замените на свои данные
+STUDENT_NAME = "⭐ Марина С.⭐"
+STUDENT_GROUP = "122-МКо"
 DISCIPLINE = "Современное Web-программирование"
-UNIVERSITY = "СГУ им. Питирима Сорокина"  # Замените при необходимости
+UNIVERSITY = "СГУ им. Питирима Сорокина"
 
 # --- CSS для футера ---
 st.markdown("""
